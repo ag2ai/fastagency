@@ -73,7 +73,7 @@ openapi = [
 fastapi = [
     "asyncer==0.0.8",
     "fastapi>=0.112,<1",
-    "websockets>=13,<16",
+    "websockets>=13,<14",
 ]
 
 nats = [
