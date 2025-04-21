@@ -1,7 +1,7 @@
 import json
 import random
 from collections.abc import Iterable, Iterator
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional, Union
 from uuid import UUID, uuid4
 
 import mesop as me
@@ -34,6 +34,7 @@ from .timer import wakeup_component
 
 if TYPE_CHECKING:
     from autogen.events.agent_events import (
+        ErrorEvent,
         RunCompletionEvent,
         TextEvent,
         UsingAutoReplyEvent,
@@ -244,12 +245,18 @@ class MesopGUIMessageVisitor(MessageProcessorMixin):
             style=self._styles.message.text,
         )
 
-    def visit_error(self, message: Error) -> None:
+    def visit_error(self, message: "Union[Error, ErrorEvent]") -> None:
+        content = (
+            f"### {message.short}\n{message.long}"
+            if isinstance(message, Error)
+            else message.content.error
+        )
         self.visit_default(
             message,
-            content=f"### {message.short}\n{message.long}",
+            content=content,
             style=self._styles.message.error,
             scrollable=True,
+            error=True,
         )
 
     def visit_system_message(self, message: SystemMessage) -> None:
