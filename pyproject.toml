@@ -47,7 +47,7 @@ dependencies = [
     "ag2==0.8.7",
 #    "ag2[anthropic,together]==0.8.1",
 #    "together>=1.2.11,<1.3", # ToDo: together 1.3.0 has issues with our dev dependencies
-    "markdownify==0.14.1", # Needed by autogen.WebSurferAgent but not included
+    "markdownify==1.1.0", # Needed by autogen.WebSurferAgent but not included
     "typer>=0.9",
     "typing-extensions>=4.8.0,<5",
     "pydantic>=2.2.0,<3",
