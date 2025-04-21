@@ -249,7 +249,7 @@ class MesopGUIMessageVisitor(MessageProcessorMixin):
         content = (
             f"### {message.short}\n{message.long}"
             if isinstance(message, Error)
-            else message.content.error
+            else str(message.content.error)
         )
         self.visit_default(
             message,

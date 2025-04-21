@@ -146,7 +146,7 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
         self._format_and_print(console_msg)
 
     def visit_error(self, message: "ErrorEvent") -> None:
-        content = message.content.error
+        content = str(message.content.error)
         console_msg = self.ConsoleMessage(
             sender=None,
             recipient=None,
