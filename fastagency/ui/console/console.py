@@ -22,6 +22,7 @@ from ...messages import (
 
 if TYPE_CHECKING:
     from autogen.events.agent_events import (
+        ErrorEvent,
         ExecuteFunctionEvent,
         InputRequestEvent,
         RunCompletionEvent,
@@ -141,6 +142,16 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
             recipient=content.recipient,
             heading=message.type,
             body=content.content,
+        )
+        self._format_and_print(console_msg)
+
+    def visit_error(self, message: "ErrorEvent") -> None:
+        content = message.error
+        console_msg = self.ConsoleMessage(
+            sender=None,
+            recipient=None,
+            heading=message.type,
+            body=content,
         )
         self._format_and_print(console_msg)
 
