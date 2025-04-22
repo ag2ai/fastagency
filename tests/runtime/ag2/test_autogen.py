@@ -19,6 +19,8 @@ from fastagency.runtimes.ag2.ag2 import _findall, _match
 from fastagency.ui.console import ConsoleUI
 from tests.conftest import InputMock
 
+from ...docs_src.helpers import skip_internal_server_error
+
 
 class TestPatternMatching:
     def test_end_of_message(self) -> None:
@@ -148,6 +150,7 @@ class TestPatternMatching:
         MultimodalConversableAgent,
     ],
 )
+@skip_internal_server_error
 def test_simple(
     openai_gpt4o_mini_llm_config: LLMConfig, agent_class: type[ConversableAgent]
 ) -> None:
@@ -212,6 +215,7 @@ def test_simple(
         MultimodalConversableAgent,
     ],
 )
+@skip_internal_server_error
 def test_simple_async(
     openai_gpt4o_mini_llm_config: LLMConfig, agent_class: type[ConversableAgent]
 ) -> None:
