@@ -8,7 +8,7 @@ version = "0.1.0"
 name = "my_bank_app"
 
 dependencies = [
-    "fastagency[openai,mesop,server]>=0.8.6",
+    "fastagency[openai,mesop,server]>=0.8.6.post0",
 ]
 
 [project.optional-dependencies]

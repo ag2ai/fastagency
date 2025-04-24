@@ -64,6 +64,10 @@ mesop = [
     "mesop>=0.12.7, <1; python_version >= '3.10'"
 ]
 
+copilotkit = [
+    "agentwire==0.1.4"
+]
+
 openapi = [
     "fastapi-code-generator==0.5.2",
     "fastapi>=0.112,<1",
@@ -96,7 +100,7 @@ firebase = [
 ]
 
 submodules = [
-    "fastagency[openai,mesop,openapi,fastapi,nats,server,firebase,basic_auth]"
+    "fastagency[openai,mesop,copilotkit,openapi,fastapi,nats,server,firebase,basic_auth]"
 ]
 
 # dev dependencies

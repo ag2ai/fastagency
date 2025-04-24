@@ -45,6 +45,14 @@ search:
             - [UIBase](api/fastagency/UIBase.md)
             - [WorkflowsProtocol](api/fastagency/WorkflowsProtocol.md)
             - adapters
+                - awp
+                    - [AWPAdapter](api/fastagency/adapters/awp/AWPAdapter.md)
+                    - base
+                        - [AWPAdapter](api/fastagency/adapters/awp/base/AWPAdapter.md)
+                        - [AWPThreadInfo](api/fastagency/adapters/awp/base/AWPThreadInfo.md)
+                        - [WorkflowInfo](api/fastagency/adapters/awp/base/WorkflowInfo.md)
+                    - tryrun
+                        - [simple_workflow](api/fastagency/adapters/awp/tryrun/simple_workflow.md)
                 - fastapi
                     - [FastAPIAdapter](api/fastagency/adapters/fastapi/FastAPIAdapter.md)
                     - [FastAPIProvider](api/fastagency/adapters/fastapi/FastAPIProvider.md)

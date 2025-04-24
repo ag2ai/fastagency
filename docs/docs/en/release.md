@@ -12,6 +12,17 @@ hide:
 ---
 
 # Release Notes
+## v0.8.6.post0
+
+### What's Changed
+* Update cookiecutter generated files and release notes by [@kumaranvpl](https://github.com/kumaranvpl){.external-link target="_blank"} in [#681](https://github.com/ag2ai/fastagency/pull/681){.external-link target="_blank"}
+* Handle RunCompletionEvent by [@kumaranvpl](https://github.com/kumaranvpl){.external-link target="_blank"} in [#684](https://github.com/ag2ai/fastagency/pull/684){.external-link target="_blank"}
+* Use UUIDEncoder to dump message with UUID by [@kumaranvpl](https://github.com/kumaranvpl){.external-link target="_blank"} in [#685](https://github.com/ag2ai/fastagency/pull/685){.external-link target="_blank"}
+* Fix workflows with multimodal conversable agent by [@rjambrecic](https://github.com/rjambrecic){.external-link target="_blank"} in [#686](https://github.com/ag2ai/fastagency/pull/686){.external-link target="_blank"}
+
+
+**Full Changelog**: [#v0.8.6...v0.8.6.post0](https://github.com/ag2ai/fastagency/compare/v0.8.6...v0.8.6.post0){.external-link target="_blank"}
+
 ## v0.8.6
 
 ### What's Changed
