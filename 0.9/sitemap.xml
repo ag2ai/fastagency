@@ -85,6 +85,36 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/WorkflowsProtocol/"/>
     </url>
     <url>
+        <loc>https://fastagency.ai/latest/api/fastagency/adapters/awp/AWPAdapter/</loc>
+        <lastmod>2025-04-25</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/adapters/awp/AWPAdapter/"/>
+    </url>
+    <url>
+        <loc>https://fastagency.ai/latest/api/fastagency/adapters/awp/base/AWPAdapter/</loc>
+        <lastmod>2025-04-25</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/adapters/awp/base/AWPAdapter/"/>
+    </url>
+    <url>
+        <loc>https://fastagency.ai/latest/api/fastagency/adapters/awp/base/AWPThreadInfo/</loc>
+        <lastmod>2025-04-25</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/adapters/awp/base/AWPThreadInfo/"/>
+    </url>
+    <url>
+        <loc>https://fastagency.ai/latest/api/fastagency/adapters/awp/base/WorkflowInfo/</loc>
+        <lastmod>2025-04-25</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/adapters/awp/base/WorkflowInfo/"/>
+    </url>
+    <url>
+        <loc>https://fastagency.ai/latest/api/fastagency/adapters/awp/tryrun/simple_workflow/</loc>
+        <lastmod>2025-04-25</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://fastagency.ai/latest/api/fastagency/adapters/awp/tryrun/simple_workflow/"/>
+    </url>
+    <url>
         <loc>https://fastagency.ai/latest/api/fastagency/adapters/fastapi/FastAPIAdapter/</loc>
         <lastmod>2025-04-25</lastmod>
         <changefreq>daily</changefreq>
