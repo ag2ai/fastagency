@@ -47,7 +47,7 @@ def simple_workflow(ui: UI, params: dict[str, Any]) -> str:
     return ui.process(response)  # type: ignore[no-any-return]
 
 
-adapter = AWPAdapter(provider=wf)
+adapter = AWPAdapter(provider=wf, wf_name="simple_learning")
 
 app = FastAPI()
 app.include_router(adapter.router)

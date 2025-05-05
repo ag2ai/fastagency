@@ -96,6 +96,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         *,
         discovery_path: str = "/fastagency/discovery",
         awp_path: str = "/fastagency/awp",
+        wf_name: Optional[str] = None,
         get_user_id: Optional[Callable[..., Optional[str]]] = None,
     ) -> None:
         """Provider for AWP.
@@ -104,6 +105,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             provider (ProviderProtocol): The provider.
             discovery_path (str, optional): The discovery path. Defaults to "/fastagency/discovery".
             awp_path (str, optional): The agent wire protocol path. Defaults to "/fastagency/awp".
+            wf_name (str, optional): The name of the workflow to run Defaults to first workflow in adapter.
             get_user_id (Optional[Callable[[], Optional[UUID]]], optional): The get user id. Defaults to None.
         """
         self.provider = provider
@@ -111,6 +113,9 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         self.awp_path = awp_path
         self.get_user_id = get_user_id or (lambda: None)
         self._awp_threads: dict[str, AWPThreadInfo] = {}
+        if wf_name is None:
+            wf_name = self.provider.names[0]
+        self.wf_name = wf_name
         self.router = self.setup_routes()
 
     def get_thread_info_of_workflow(
@@ -232,7 +237,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 user_id=user_id,
                 workflow_uuid=workflow_uuid,
                 params={},
-                name="simple_learning",
+                name=self.wf_name,
             )
 
             async def process_messages_in_background(workflow_uuid: str) -> None:
