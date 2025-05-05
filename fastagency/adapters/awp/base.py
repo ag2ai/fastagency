@@ -7,6 +7,8 @@ from typing import Any, AsyncIterator, Callable, Optional
 from uuid import uuid4
 
 import autogen
+import autogen.messages
+import autogen.messages.agent_messages
 from agentwire.core import (
     BaseMessage,
     CustomEvent,
@@ -308,7 +310,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         if isinstance(message, IOMessage):
             workflow_uuid = message.workflow_uuid
         else:
-            logger.error(f"Dang! Message is not an IOMessage: {message}")
+            logger.error(f"Message is not an IOMessage: {message}")
             logger.error(f"Message type: {type(message)}")
             workflow_uuid = workflow_ids.workflow_uuid
 
@@ -367,10 +369,15 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             )
             out_queue.put_nowait(message_started)
 
+            if message.prompt:
+                prompt = message.prompt.replace(
+                    "Press enter to skip and use auto-reply",
+                    "Answer continue to skip and use auto-reply",
+                )
             message_content = TextMessageContentEvent(
                 type=EventType.TEXT_MESSAGE_CONTENT,
                 message_id=message.uuid,
-                delta=message.prompt,
+                delta=prompt,
             )
             out_queue.put_nowait(message_content)
 
@@ -392,16 +399,19 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             out_queue.put_nowait(run_finished)
 
             # wait for the answer to be sent back
-            return await thread_info.input_queue.get()
+            response = await thread_info.input_queue.get()
+            if response == "continue":
+                response = ""
+            return response
 
         return syncify(a_visit_text_input)(self, message)
 
     # Non fastagency messages``
 
-    def visit_text(self, message: autogen.events.agent_events.TextEvent) -> None:
+    def visit_text(self, message: autogen.messages.agent_messages.TextMessage) -> None:
         async def a_visit_text(
             self: AWPAdapter,
-            message: autogen.events.agent_events.InputRequestEvent,
+            message: autogen.messages.agent_messages.TextMessage,
             workflow_uuid: str,
         ) -> None:
             logger.info(f"Visiting text event: {message}")
@@ -436,6 +446,45 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         workflow_uuid = workflow_ids.workflow_uuid
         syncify(a_visit_text)(self, message, workflow_uuid)
 
+    def visit_tool_call(
+        self, message: autogen.messages.agent_messages.ToolCallMessage
+    ) -> None:
+        async def a_visit_tool_call(
+            self: AWPAdapter,
+            message: autogen.messages.agent_messages.ToolCallMessage,
+            workflow_uuid: str,
+        ) -> None:
+            logger.info(f"Visiting tool call event: {message}")
+            thread_info = self.get_thread_info_of_workflow(workflow_uuid)
+            if thread_info is None:
+                logger.error(
+                    f"Thread info not found for workflow {workflow_uuid}: {self._awp_threads}"
+                )
+                return
+
+            out_queue = thread_info.out_queue
+            content = message.content
+            uuid = str(content.uuid)
+            message_started = TextMessageStartEvent(
+                type=EventType.TEXT_MESSAGE_START, message_id=uuid, role="assistant"
+            )
+            out_queue.put_nowait(message_started)
+
+            message_content = TextMessageContentEvent(
+                type=EventType.TEXT_MESSAGE_CONTENT,
+                message_id=uuid,
+                delta=f"AG2 wants to invoke tool: {content.tool_calls[0].function.name}",
+            )
+            out_queue.put_nowait(message_content)
+
+            message_end = TextMessageEndEvent(
+                type=EventType.TEXT_MESSAGE_END, message_id=uuid
+            )
+            out_queue.put_nowait(message_end)
+
+        workflow_uuid = workflow_ids.workflow_uuid
+        syncify(a_visit_tool_call)(self, message, workflow_uuid)
+
     def visit_input_request(
         self, message: autogen.events.agent_events.InputRequestEvent
     ) -> None:
@@ -455,7 +504,31 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 )
 
             out_queue = thread_info.out_queue
+            uuid = str(uuid4().hex)
+            message_started = TextMessageStartEvent(
+                type=EventType.TEXT_MESSAGE_START, message_id=uuid, role="assistant"
+            )
+            out_queue.put_nowait(message_started)
+
+            prompt = message.content.prompt.replace(
+                "Press enter to skip and use auto-reply",
+                "Answer continue to skip and use auto-reply",
+            )
+
+            message_content = TextMessageContentEvent(
+                type=EventType.TEXT_MESSAGE_CONTENT,
+                message_id=uuid,
+                delta=prompt,
+            )
+            out_queue.put_nowait(message_content)
+
+            message_end = TextMessageEndEvent(
+                type=EventType.TEXT_MESSAGE_END, message_id=uuid
+            )
+            out_queue.put_nowait(message_end)
+
             ## send end of run message, so that the UI can acquire answer and call us back
+
             run_finished = RunFinishedEvent(
                 type=EventType.RUN_FINISHED,
                 thread_id=thread_info.awp_id,
@@ -463,7 +536,10 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             )
             out_queue.put_nowait(run_finished)
             input_queue = thread_info.input_queue
-            message.content.respond(await input_queue.get())
+            response = await input_queue.get()
+            if response == "continue":
+                response = ""
+            message.content.respond(response)
 
         workflow_uuid = workflow_ids.workflow_uuid
         syncify(a_visit_input_request)(self, message, workflow_uuid)
