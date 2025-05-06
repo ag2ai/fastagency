@@ -100,6 +100,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         awp_path: str = "/fastagency/awp",
         wf_name: Optional[str] = None,
         get_user_id: Optional[Callable[..., Optional[str]]] = None,
+        filter: Optional[Callable[[BaseMessage], bool]] = None,
     ) -> None:
         """Provider for AWP.
 
@@ -109,6 +110,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             awp_path (str, optional): The agent wire protocol path. Defaults to "/fastagency/awp".
             wf_name (str, optional): The name of the workflow to run Defaults to first workflow in adapter.
             get_user_id (Optional[Callable[[], Optional[UUID]]], optional): The get user id. Defaults to None.
+            filter (Optional[Callable[[BaseMessage], bool]], optional): The filter   function. Defaults to None.
         """
         self.provider = provider
         self.discovery_path = discovery_path
@@ -119,6 +121,14 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             wf_name = self.provider.names[0]
         self.wf_name = wf_name
         self.router = self.setup_routes()
+        self.filter = filter
+
+    def visit(self, message: IOMessage) -> Optional[str]:
+        if self.filter and not self.filter(message):
+            logger.info(f"Message filtered out: {message}")
+            return None
+        # call the super class visit method
+        return super().visit(message)
 
     def get_thread_info_of_workflow(
         self, workflow_uuid: str

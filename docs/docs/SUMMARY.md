@@ -53,6 +53,7 @@ search:
                         - [WorkflowInfo](api/fastagency/adapters/awp/base/WorkflowInfo.md)
                     - tryrun
                         - [simple_workflow](api/fastagency/adapters/awp/tryrun/simple_workflow.md)
+                        - [without_student_messages](api/fastagency/adapters/awp/tryrun/without_student_messages.md)
                 - fastapi
                     - [FastAPIAdapter](api/fastagency/adapters/fastapi/FastAPIAdapter.md)
                     - [FastAPIProvider](api/fastagency/adapters/fastapi/FastAPIProvider.md)
