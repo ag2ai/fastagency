@@ -12,6 +12,18 @@ hide:
 ---
 
 # Release Notes
+## v0.9.1
+
+### What's Changed
+* Update release notes by [@kumaranvpl](https://github.com/kumaranvpl){.external-link target="_blank"} in [#704](https://github.com/ag2ai/fastagency/pull/704){.external-link target="_blank"}
+* Use autogen version 0.9.1a1 and update fastagency to version 0.9.1a1 by [@kumaranvpl](https://github.com/kumaranvpl){.external-link target="_blank"} in [#705](https://github.com/ag2ai/fastagency/pull/705){.external-link target="_blank"}
+* fix workflow name selection and HIL by [@davorinrusevljan](https://github.com/davorinrusevljan){.external-link target="_blank"} in [#707](https://github.com/ag2ai/fastagency/pull/707){.external-link target="_blank"}
+* awp support for message filtering by [@davorinrusevljan](https://github.com/davorinrusevljan){.external-link target="_blank"} in [#708](https://github.com/ag2ai/fastagency/pull/708){.external-link target="_blank"}
+* Update version by [@harishmohanraj](https://github.com/harishmohanraj){.external-link target="_blank"} in [#709](https://github.com/ag2ai/fastagency/pull/709){.external-link target="_blank"}
+
+
+**Full Changelog**: [#v0.9.0...v0.9.1](https://github.com/ag2ai/fastagency/compare/v0.9.0...v0.9.1){.external-link target="_blank"}
+
 ## v0.9.0
 
 ### What's Changed
