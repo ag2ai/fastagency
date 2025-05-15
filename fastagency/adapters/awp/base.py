@@ -3,7 +3,7 @@ import threading
 from asyncio import Queue
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Callable, Optional
+from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Optional
 from uuid import uuid4
 
 import autogen
@@ -23,6 +23,7 @@ from agentwire.core import (
 )
 from agentwire.encoder import EventEncoder
 from asyncer import asyncify, syncify
+from autogen.tools import Tool
 from fastapi import (
     APIRouter,
     Depends,
@@ -35,6 +36,7 @@ from pydantic import BaseModel
 from fastagency.logging import get_logger
 
 from ...base import (
+    UI,
     CreateWorkflowUIMixin,
     ProviderProtocol,
     Runnable,
@@ -51,6 +53,9 @@ from ...messages import (
     TextInput,
     TextMessage,
 )
+
+if TYPE_CHECKING:
+    from autogen.io.run_response import RunResponse
 
 
 class WorkflowInfo(BaseModel):
@@ -77,6 +82,8 @@ class AWPThreadInfo:
         self.input_queue: Queue[str] = Queue()
         self.active = True
         self.encoder = EventEncoder()
+        self.run_response = None
+        self.tools: list[Tool] = []
         # all messages that have been attempted to send in one run
         self.sent_messages: list[BaseMessage] = []
 
@@ -123,6 +130,11 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         self.router = self.setup_routes()
         self.filter = filter
 
+    def create_awp_workflow_ui(
+        self: UIBase, workflow_uuid: str, thread_info: AWPThreadInfo
+    ) -> "UI":
+        return AWPUI(uibase=self, workflow_uuid=workflow_uuid, thread_info=thread_info)
+
     def visit(self, message: IOMessage) -> Optional[str]:
         if self.filter and not self.filter(message):
             logger.info(f"Message filtered out: {message}")
@@ -165,13 +177,41 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             thread_info.active = False
             logger.info(f"Ended awp thread: {thread_info}")
 
+    def set_run_tools(self, tools: list[Tool], thread_info: AWPThreadInfo) -> None:
+        ui_tools: list[Tool] = []
+        for tool in tools:
+            logger.info(f"Setting up tool: {tool.name}")
+
+            def callback(*args: Any, **kwargs: Any) -> None:
+                logger.info(
+                    f"UI Tool callback called with args: {args}, kwargs: {kwargs}"
+                )
+
+            try:
+                ag2_tool = Tool(
+                    name=tool.name,
+                    description=tool.description,
+                    func_or_tool=callback,
+                    parameters_json_schema=tool.parameters,
+                )
+                ui_tools.append(ag2_tool)
+            except Exception as e:
+                logger.error(f"Error creating tool: {e}")
+
+            thread_info.tools = ui_tools
+            if thread_info.run_response:
+                thread_info.run_response.set_ui_tools(ui_tools)
+
     async def run_thread(
         self, input: RunAgentInput, request: Request
     ) -> AsyncIterator[str]:
+        logger.info(input.tools)
         thread_info = self._awp_threads.get(input.thread_id)
         if thread_info is None:
             logger.error(f"Thread {input.thread_id} not found")
             raise RuntimeError(f"Thread {input.thread_id} not found")
+
+        self.set_run_tools(input.tools, thread_info)
 
         run_started = RunStartedEvent(
             type=EventType.RUN_STARTED,
@@ -252,29 +292,35 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 name=self.wf_name,
             )
 
-            async def process_messages_in_background(workflow_uuid: str) -> None:
+            async def process_messages_in_background(
+                thread_info: AWPThreadInfo,
+            ) -> None:
                 def a_process_messages_in_background(
-                    workflow_uuid: str,
+                    thread_info: AWPThreadInfo,
                 ) -> None:
+                    # store thread_info in thread local storage
+                    logger.info(
+                        f"Processing messages in background {threading.get_ident()}"
+                    )
+                    threading.local().fastagency_thread_info = thread_info
+                    workflow_uuid = thread_info.workflow_id
                     workflow_ids.workflow_uuid = workflow_uuid
                     self.provider.run(
                         name=init_msg.name,
-                        ui=self.create_workflow_ui(workflow_uuid),
+                        ui=self.create_awp_workflow_ui(workflow_uuid, thread_info),
                         user_id=user_id if user_id else "None",
                         **init_msg.params,
                     )
 
-                await asyncify(a_process_messages_in_background)(workflow_uuid)
+                await asyncify(a_process_messages_in_background)(thread_info)
                 workflow_ids.workflow_uuid = None
 
             try:
                 task = asyncio.create_task(
-                    process_messages_in_background(workflow_uuid)
+                    # process_messages_in_background(workflow_uuid)
+                    process_messages_in_background(thread_info)
                 )
                 logger.info(f"Started task: {task}")
-                # asyncio.create_task(
-                #    asyncify(process_messages_in_background)(workflow_uuid)
-                # )
             except Exception as e:
                 logger.error(f"Error in awp endpoint: {e}", stack_info=True)
             finally:
@@ -603,6 +649,40 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         fastapi_url: str,
     ) -> ProviderProtocol:
         raise NotImplementedError("create")
+
+
+class AWPUI(UI):
+    def __init__(
+        self, uibase: UIBase, workflow_uuid: str, thread_info: AWPThreadInfo
+    ) -> None:
+        """Initialize the AWPUI.
+
+        Args:
+            uibase (UIBase): The UI base.
+            workflow_uuid (str): The workflow UUID.
+            thread_info (AWPThreadInfo): The thread info.
+        """
+        super().__init__(uibase=uibase, workflow_uuid=workflow_uuid)
+        self.thread_info = thread_info
+
+    def process(self, response: "RunResponse") -> str:
+        """Process the response from the workflow.
+
+        This method processes the events in the response and waits for the
+        summary to be ready.
+        """
+        logger.info(
+            f"Calling process method in thread {threading.current_thread().name} , {threading.get_ident()}"
+        )
+        thread_info = self.thread_info
+        thread_info.run_response = response
+        response.set_ui_tools(thread_info.tools)
+        for event in response.events:
+            self.process_message(event)
+        # remove response from the thread variables
+        thread_info.run_response = None
+
+        return str(response.summary)
 
 
 logger = get_logger(__name__)
