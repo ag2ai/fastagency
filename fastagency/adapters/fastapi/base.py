@@ -207,7 +207,15 @@ class FastAPIAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         async def a_visit_default(
             self: FastAPIAdapter, message: IOMessage
         ) -> Optional[str]:
-            workflow_uuid = message.workflow_uuid
+            workflow_uuid = getattr(message, "workflow_uuid", None)
+            # DONOT raise RuntimeError, because when we devide the MesopUI with FastAPI,
+            # the workflow_uuid is not in websocket events content, but we still want to send the message
+            if workflow_uuid is None:
+                # For the future, we may add a feature for the autogen agent run response with workflow_uuid
+                logger.warning(
+                    f"Workflow UUID not found in message: {message}, {self.websockets}"
+                )
+                return None
             if workflow_uuid not in self.websockets:
                 logger.error(
                     f"Workflow {workflow_uuid} not found in websockets: {self.websockets}"
