@@ -213,7 +213,7 @@ class FastAPIAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             if workflow_uuid is None:
                 # For the future, we may add a feature for the autogen agent run response with workflow_uuid
                 logger.warning(
-                    f"Workflow UUID not found in message: {message}, {self.websockets}"
+                    f"Workflow UUID not found in message: {message}"
                 )
                 return None
             if workflow_uuid not in self.websockets:
