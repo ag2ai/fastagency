@@ -1,10 +1,12 @@
 import asyncio
 import threading
+import json
 from asyncio import Queue
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable, Optional
 from uuid import uuid4
+
 
 import autogen
 import autogen.messages
@@ -20,10 +22,14 @@ from agentwire.core import (
     TextMessageEndEvent,
     TextMessageStartEvent,
     UserMessage,
+    ToolCallStartEvent,
+    ToolCallArgsEvent,
+    ToolCallEndEvent,
 )
+
 from agentwire.encoder import EventEncoder
 from asyncer import asyncify, syncify
-from autogen.tools import Tool
+from autogen.tools import Tool as AG2Tool
 from fastapi import (
     APIRouter,
     Depends,
@@ -31,7 +37,7 @@ from fastapi import (
     Request,
 )
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from fastagency.logging import get_logger
 
@@ -83,7 +89,7 @@ class AWPThreadInfo:
         self.active = True
         self.encoder = EventEncoder()
         self.run_response = None
-        self.tools: list[Tool] = []
+        self.tools: list[AG2Tool] = []
         # all messages that have been attempted to send in one run
         self.sent_messages: list[BaseMessage] = []
 
@@ -177,18 +183,56 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             thread_info.active = False
             logger.info(f"Ended awp thread: {thread_info}")
 
-    def set_run_tools(self, tools: list[Tool], thread_info: AWPThreadInfo) -> None:
-        ui_tools: list[Tool] = []
+    def set_run_tools(self, tools: list[AG2Tool], thread_info: AWPThreadInfo) -> None:
+        ui_tools: list[AG2Tool] = []
         for tool in tools:
             logger.info(f"Setting up tool: {tool.name}")
+            if tool.name == "change_background":
+                logger.info(f"Tool parameters: {tool.parameters}")
 
-            def callback(*args: Any, **kwargs: Any) -> None:
-                logger.info(
-                    f"UI Tool callback called with args: {args}, kwargs: {kwargs}"
-                )
+            def callback(*args: Any, tool_name: str=tool.name, **kwargs: Any) -> None:
+                try:
+                    logger.info(
+                        f"UI Tool {tool_name} callback called with args: {args}, kwargs: {kwargs}"
+                    )
+                    out_queue = thread_info.out_queue
+                    call_id = str(uuid4().hex)
+                    tool_call_start = ToolCallStartEvent(
+                        type=EventType.TOOL_CALL_START,
+                        tool_call_name = tool_name,
+                        tool_call_id = call_id,
+                    )
+                    out_queue.put_nowait(tool_call_start)
+                    delta=json.dumps(kwargs["args"])
+                    logger.info(f"!!!!!!!!!!Tool call args: |{delta}|")
+                    tool_call_args = ToolCallArgsEvent(
+                        type=EventType.TOOL_CALL_ARGS,
+                        tool_call_id=call_id,
+                        delta=json.dumps(kwargs["args"])
+                    )
+                    out_queue.put_nowait(tool_call_args)
+
+                    tool_call_end = ToolCallEndEvent(
+                        type=EventType.TOOL_CALL_END,
+                        tool_call_id=call_id
+                    )
+                    out_queue.put_nowait(tool_call_end)
+
+                    run_finished = RunFinishedEvent(
+                        type=EventType.RUN_FINISHED,
+                        thread_id=thread_info.awp_id,
+                        run_id=thread_info.run_id,
+                    )
+                    out_queue.put_nowait(run_finished)
+                except Exception as e:
+                    logger.error(f"Error in tool callback: {e}")
+                                
+                # wait for the answer to be sent back
+                #response = await thread_info.input_queue.get()
+
 
             try:
-                ag2_tool = Tool(
+                ag2_tool = AG2Tool(
                     name=tool.name,
                     description=tool.description,
                     func_or_tool=callback,
@@ -198,14 +242,19 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             except Exception as e:
                 logger.error(f"Error creating tool: {e}")
 
-            thread_info.tools = ui_tools
-            if thread_info.run_response:
-                thread_info.run_response.set_ui_tools(ui_tools)
+        thread_info.tools = ui_tools
+        #todo delete me
+        #if thread_info.run_response:
+        #    logger.info(f"Setting tools in run response: {ui_tools}")
+        #    thread_info.run_response.set_ui_tools(ui_tools)
+        #else:
+        #    logger.error(
+        #        f"runResponse not found in {thread_info.workflow_id}"
+        #    )
 
     async def run_thread(
         self, input: RunAgentInput, request: Request
     ) -> AsyncIterator[str]:
-        logger.info(input.tools)
         thread_info = self._awp_threads.get(input.thread_id)
         if thread_info is None:
             logger.error(f"Thread {input.thread_id} not found")
@@ -255,7 +304,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
 
         @router.post(self.awp_path)
         async def run_agent(
-            input: RunAgentInput,
+            #input: RunAgentInput,
             request: Request,
             user_id: Optional[str] = Depends(self.get_user_id),
         ) -> StreamingResponse:
@@ -266,6 +315,28 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 "X-Accel-Buffering": "no",  # Nginx: prevent buffering
             }
 
+            #todo hacka round
+            body_bytes = await request.body()
+            body_str = body_bytes.decode()
+            logger.debug(f"RAW REQUEST BODY: {body_str}") # Or use logger
+
+            try:
+                # Manually try to parse and validate
+                data = await request.json() # Or parse from body_str if not JSON
+                input = RunAgentInput(**data)
+                # If successful, do something with item_model
+            except ValidationError as e:
+                print("PYDANTIC VALIDATION FAILED:")
+                print(e.errors()) # Detailed Pydantic errors
+                print(e.json())   # JSON representation of errors
+                # FastAPI would normally do this automatically:
+                raise HTTPException(status_code=422, detail=e.errors())
+            except Exception as e:
+                print(f"OTHER PARSING ERROR: {e}")
+                raise HTTPException(status_code=400, detail=f"Invalid request body: {e}")
+
+
+            input = RunAgentInput(**await request.json())
             if input.thread_id in self._awp_threads:
                 ## existing thread, resume
                 logger.info(f"Resuming thread: {input.thread_id}")
@@ -302,7 +373,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                     logger.info(
                         f"Processing messages in background {threading.get_ident()}"
                     )
-                    threading.local().fastagency_thread_info = thread_info
                     workflow_uuid = thread_info.workflow_id
                     workflow_ids.workflow_uuid = workflow_uuid
                     self.provider.run(
@@ -366,8 +436,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         if isinstance(message, IOMessage):
             workflow_uuid = message.workflow_uuid
         else:
-            logger.error(f"Message is not an IOMessage: {message}")
-            logger.error(f"Message type: {type(message)}")
+            logger.warning(f"Message is not an IOMessage, message type: {type(message)}")
             workflow_uuid = workflow_ids.workflow_uuid
 
         return syncify(a_visit_default)(self, message, workflow_uuid)
@@ -663,6 +732,7 @@ class AWPUI(UI):
             thread_info (AWPThreadInfo): The thread info.
         """
         super().__init__(uibase=uibase, workflow_uuid=workflow_uuid)
+        logger.info(f"Creating AWPUI {thread_info}")
         self.thread_info = thread_info
 
     def process(self, response: "RunResponse") -> str:
@@ -676,7 +746,12 @@ class AWPUI(UI):
         )
         thread_info = self.thread_info
         thread_info.run_response = response
-        response.set_ui_tools(thread_info.tools)
+        try:
+            logger.info(f"Setting up the tools")
+            response.set_ui_tools(thread_info.tools)
+        except:
+            logger.error(f"Error setting up the tools: {thread_info.tools}")
+            raise
         for event in response.events:
             self.process_message(event)
         # remove response from the thread variables
