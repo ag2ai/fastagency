@@ -290,6 +290,20 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         thread_info.sent_messages.append(message)
         return str(thread_info.encoder.encode(message))
 
+    def ducttape_request(self, data: dict[str, Any]) -> None:
+        """Remove unwanted data from the request.
+
+        This method is used to remove unwanted data from the request.
+        Once agenwire packahge is fixed this can be removed
+        """
+        messages = data.get("messages", [])
+        for message in messages:
+            role = message.get("role", None)
+            if role == "tool":
+                # If role is 'tool', remove it from the message
+                print("Removing 'name' from tool message:", message)
+                del message["name"]
+
     def setup_routes(self) -> APIRouter:
         router = APIRouter()
 
@@ -313,7 +327,8 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
 
             try:
                 # Manually try to parse and validate
-                data = await request.json()  # Or parse from body_str if not JSON
+                data = await request.json()
+                self.ducttape_request(data)   #remove unwanted data from request
                 input = RunAgentInput(**data)
                 # If successful, do something with item_model
             except ValidationError as e:
