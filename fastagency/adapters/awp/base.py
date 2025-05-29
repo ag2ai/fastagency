@@ -187,7 +187,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
         self, tool_name: str, thread_info: AWPThreadInfo
     ) -> Callable[..., None]:
         def callback(args: Any) -> None:
-            logger.info(f"----------------------Tool {tool_name} called with args: {args}")
             out_queue = thread_info.out_queue
             call_id = str(uuid4().hex)
             tool_call_start = ToolCallStartEvent(
@@ -198,7 +197,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             out_queue.put_nowait(tool_call_start)
 
             delta = json.dumps(args)
-            logger.info(f"Tool call args: |{delta}|")
             tool_call_args = ToolCallArgsEvent(
                 type=EventType.TOOL_CALL_ARGS,
                 tool_call_id=call_id,
@@ -210,7 +208,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 type=EventType.TOOL_CALL_END, tool_call_id=call_id
             )
             out_queue.put_nowait(tool_call_end)
-            
+
             run_finished = RunFinishedEvent(
                 type=EventType.RUN_FINISHED,
                 thread_id=thread_info.awp_id,
@@ -219,11 +217,10 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             out_queue.put_nowait(run_finished)
 
         return callback
-    
 
     def set_run_tools(self, tools: list[AG2Tool], thread_info: AWPThreadInfo) -> None:
         ui_tools: list[AG2Tool] = []
-        tool_names :list[str] = []
+        tool_names: list[str] = []
         for tool in tools:
             logger.info(f"Setting up tool: {tool.name}")
             tool_names.append(tool.name)
@@ -265,9 +262,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 message = await asyncio.wait_for(
                     thread_info.out_queue.get(), timeout=0.5
                 )
-                logger.info(
-                    f"++++++++++Sending message in thread {input.thread_id}: {message}"
-                )
                 yield self._sse_send(message, thread_info)
                 if isinstance(message, RunFinishedEvent):
                     break
@@ -304,10 +298,9 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             role = message.get("role", None)
             if role == "tool":
                 # If role is 'tool', remove it from the message
-                print("Removing 'name' from tool message:", message)
                 del message["name"]
 
-    def setup_routes(self) -> APIRouter:
+    def setup_routes(self) -> APIRouter:  # noqa: C901
         router = APIRouter()
 
         @router.post(self.awp_path)
@@ -323,28 +316,21 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 "X-Accel-Buffering": "no",  # Nginx: prevent buffering
             }
 
-            # todo hacka round
-            body_bytes = await request.body()
-            body_str = body_bytes.decode()
-            logger.debug(f"RAW REQUEST BODY: {body_str}")  # Or use logger
-
             try:
                 # Manually try to parse and validate
                 data = await request.json()
-                self.ducttape_request(data)   #remove unwanted data from request
+                self.ducttape_request(data)  # remove unwanted data from request
                 input = RunAgentInput(**data)
                 # If successful, do something with item_model
             except ValidationError as e:
-                print("PYDANTIC VALIDATION FAILED:")
-                print(e.errors())  # Detailed Pydantic errors
-                print(e.json())  # JSON representation of errors
+                logger.error("PYDANTIC VALIDATION FAILED: {e.errors()}")
                 # FastAPI would normally do this automatically:
-                raise HTTPException(status_code=422, detail=e.errors())
+                raise HTTPException(status_code=422, detail=e.errors()) from None
             except Exception as e:
-                print(f"OTHER PARSING ERROR: {e}")
+                logger.error(f"OTHER PARSING ERROR: {e}")
                 raise HTTPException(
                     status_code=400, detail=f"Invalid request body: {e}"
-                )
+                ) from None
 
             input = RunAgentInput(**await request.json())
             if input.thread_id in self._awp_threads:
@@ -498,12 +484,10 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 )
 
             if thread_info.ui_tool_announced:
-                logger.info(
-                    f"UI Tool auto allowed {thread_info.awp_id}"
-                )
+                logger.info(f"UI Tool auto allowed {thread_info.awp_id}")
                 thread_info.ui_tool_announced = False
                 return ""
-            
+
             out_queue = thread_info.out_queue
 
             message_started = TextMessageStartEvent(
@@ -609,9 +593,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             tool_name = message.content.tool_calls[0].function.name
             if tool_name in thread_info.tool_names:
                 thread_info.ui_tool_announced = True
-                logger.info(
-                    f"Tool {tool_name} is announced in thread {thread_info.awp_id}"
-                )
                 return
 
             out_queue = thread_info.out_queue
@@ -656,9 +637,6 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 )
 
             if thread_info.ui_tool_announced:
-                logger.info(
-                    f"UI Tool auto allowed {thread_info.awp_id}"
-                )
                 thread_info.ui_tool_announced = False
                 message.content.respond("")
                 return
