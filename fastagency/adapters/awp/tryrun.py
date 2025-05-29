@@ -17,7 +17,7 @@ llm_config = LLMConfig(
 wf = Workflow()
 
 
-@wf.register(name="simple_learning", description="Student and teacher learning chat")
+@wf.register(name="simple_learning", description="Student and teacher learning chat.")
 def simple_workflow(ui: UI, params: dict[str, Any]) -> str:
     initial_message = ui.text_input(
         sender="Workflow",
@@ -33,7 +33,7 @@ def simple_workflow(ui: UI, params: dict[str, Any]) -> str:
         )
         teacher_agent = ConversableAgent(
             name="Teacher_Agent",
-            system_message="You are a math teacher.",
+            system_message="You are a math teacher. ",
             # human_input_mode="ALWAYS",
         )
 
