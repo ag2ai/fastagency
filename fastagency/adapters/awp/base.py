@@ -88,6 +88,8 @@ class AWPThreadInfo:
         self.encoder = EventEncoder()
         self.run_response = None
         self.tools: list[AG2Tool] = []
+        self.tool_names: list[str] = []
+        self.ui_tool_announced: bool = False
         # all messages that have been attempted to send in one run
         self.sent_messages: list[BaseMessage] = []
 
@@ -221,12 +223,12 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
 
     def set_run_tools(self, tools: list[AG2Tool], thread_info: AWPThreadInfo) -> None:
         ui_tools: list[AG2Tool] = []
+        tool_names :list[str] = []
         for tool in tools:
             logger.info(f"Setting up tool: {tool.name}")
-            if tool.name == "change_background":
-                logger.info(f"Tool parameters: {tool.parameters}")
-
+            tool_names.append(tool.name)
             callback = self.create_tool_callback(tool.name, thread_info)
+
             try:
                 ag2_tool = AG2Tool(
                     name=tool.name,
@@ -239,6 +241,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 logger.error(f"Error creating tool: {e}")
 
         thread_info.tools = ui_tools
+        thread_info.tool_names = tool_names
 
     async def run_thread(
         self, input: RunAgentInput, request: Request
@@ -494,6 +497,13 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                     f"Thread info not found for workflow {workflow_uuid}: {self._awp_threads}"
                 )
 
+            if thread_info.ui_tool_announced:
+                logger.info(
+                    f"UI Tool auto allowed {thread_info.awp_id}"
+                )
+                thread_info.ui_tool_announced = False
+                return ""
+            
             out_queue = thread_info.out_queue
 
             message_started = TextMessageStartEvent(
@@ -596,6 +606,14 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 )
                 return
 
+            tool_name = message.content.tool_calls[0].function.name
+            if tool_name in thread_info.tool_names:
+                thread_info.ui_tool_announced = True
+                logger.info(
+                    f"Tool {tool_name} is announced in thread {thread_info.awp_id}"
+                )
+                return
+
             out_queue = thread_info.out_queue
             content = message.content
             uuid = str(content.uuid)
@@ -607,7 +625,7 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
             message_content = TextMessageContentEvent(
                 type=EventType.TEXT_MESSAGE_CONTENT,
                 message_id=uuid,
-                delta=f"AG2 wants to invoke tool: {content.tool_calls[0].function.name}",
+                delta=f"AG2 wants to invoke tool: {tool_name}",
             )
             out_queue.put_nowait(message_content)
 
@@ -636,6 +654,14 @@ class AWPAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
                 raise KeyError(
                     f"Thread info not found for workflow {workflow_uuid}: {self._awp_threads}"
                 )
+
+            if thread_info.ui_tool_announced:
+                logger.info(
+                    f"UI Tool auto allowed {thread_info.awp_id}"
+                )
+                thread_info.ui_tool_announced = False
+                message.content.respond("")
+                return
 
             out_queue = thread_info.out_queue
             uuid = str(uuid4().hex)
