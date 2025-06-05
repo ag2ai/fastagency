@@ -12,14 +12,6 @@ hide:
 ---
 
 # Release Notes
-## v0.9.1.post0
-
-### What's Changed
-* Update Version by [@harishmohanraj](https://github.com/harishmohanraj){.external-link target="_blank"} in [#710](https://github.com/ag2ai/fastagency/pull/710){.external-link target="_blank"}
-
-
-**Full Changelog**: [#v0.9.1...v0.9.1.post0](https://github.com/ag2ai/fastagency/compare/v0.9.1...v0.9.1.post0){.external-link target="_blank"}
-
 ## v0.9.1
 
 ### What's Changed
