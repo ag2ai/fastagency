@@ -115,16 +115,23 @@ Deploy the Docker container for the FastAgency app to Fly.io
 **Usage**:
 
 ```console
-$ fastagency docker deploy [OPTIONS] [CONFIG_FILE]
+$ fastagency docker deploy [OPTIONS]
 ```
 
-**Arguments**:
+**Examples**:
 
-* `[CONFIG_FILE]`: The Fly.io configuration file  [default: fly.toml]
+```console
+# Deploy with default config (fly.toml)
+$ fastagency docker deploy --openai-api-key your-api-key
+
+# Deploy with custom config file
+$ fastagency docker deploy --openai-api-key your-api-key --config fly.prod.toml
+```
 
 **Options**:
 
 * `--openai-api-key TEXT`: OpenAI API key  [env var: OPENAI_API_KEY; required]
+* `-c, --config TEXT`: The Fly.io configuration file  [default: fly.toml]
 * `--help`: Show this message and exit.
 
 ### `fastagency docker run`
