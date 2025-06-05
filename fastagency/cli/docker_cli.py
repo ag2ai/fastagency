@@ -192,6 +192,7 @@ def deploy(
     config_file: Annotated[
         str,
         typer.Argument(
+            ...,
             help="The Fly.io configuration file",
         ),
     ] = "fly.toml",
