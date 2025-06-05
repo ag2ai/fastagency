@@ -30,6 +30,6 @@ my_fastagency_app
 │   ├── __init__.py
 │   ├── conftest.py
 │   └── test_workflow.py
-├── README.md
 ├── fly.toml
-└── pyproject.toml
+├── pyproject.toml
+└── README.md

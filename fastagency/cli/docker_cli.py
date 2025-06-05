@@ -189,6 +189,12 @@ def run(
     help="Deploy the Docker container for the FastAgency app to Fly.io",
 )
 def deploy(
+    config_file: Annotated[
+        str,
+        typer.Argument(
+            help="The Fly.io configuration file",
+        ),
+    ] = "fly.toml",
     *,
     openai_api_key: Annotated[
         str,
@@ -199,14 +205,6 @@ def deploy(
             show_default=False,
         ),
     ],
-    config_file: Annotated[
-        str,
-        typer.Option(
-            "--config",
-            "-c",
-            help="The Fly.io configuration file",
-        ),
-    ] = "fly.toml",
     # ctx: typer.Context,
 ) -> None:
     launch_command = [
