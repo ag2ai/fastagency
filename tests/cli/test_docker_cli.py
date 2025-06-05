@@ -176,7 +176,14 @@ def test_docker_run_invalid_argument(monkeypatch: pytest.MonkeyPatch) -> None:
             ],
         ),
         (
-            ["docker", "deploy", "--openai-api-key", "dummy_key", "--config", "fly.prod.toml"],
+            [
+                "docker",
+                "deploy",
+                "--openai-api-key",
+                "dummy_key",
+                "--config",
+                "fly.prod.toml",
+            ],
             [
                 "fly",
                 "launch",
