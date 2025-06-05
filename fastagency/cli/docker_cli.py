@@ -1,6 +1,6 @@
 import subprocess  # nosec B404
 from logging import getLogger
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 
@@ -200,7 +200,7 @@ def deploy(
         ),
     ],
     config_file: Annotated[
-        Optional[str],
+        str,
         typer.Option(
             "--config",
             "-c",
