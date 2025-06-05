@@ -1,6 +1,6 @@
 import subprocess  # nosec B404
 from logging import getLogger
-from typing import Annotated
+from typing import Annotated, Optional
 
 import typer
 
