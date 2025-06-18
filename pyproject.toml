@@ -202,6 +202,12 @@ only-include = ["fastagency", "templates", "javascript"]
 [tool.mypy]
 
 files = ["fastagency", "tests", "docs/docs_src"]
+exclude = [
+    # Exclude mesop-related docs since they contain usage examples that won't work on Python 3.9
+    "docs/docs_src/.*/mesop/.*",
+    "docs/docs_src/.*main.*mesop.*",
+    "docs/docs_src/tutorials/giphy/simple_main.py",
+]
 
 strict = true
 python_version = "3.9"
