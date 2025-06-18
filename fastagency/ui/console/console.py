@@ -13,6 +13,7 @@ from ...base import (
 )
 from ...logging import get_logger
 from ...messages import (
+    Error,
     IOMessage,
     MessageProcessorMixin,
     MultipleChoice,
@@ -161,6 +162,48 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
             recipient=content.recipient,
             heading=message.type,
             body=body,
+        )
+        self._format_and_print(console_msg)
+
+    def visit_error(self, message: IOMessage) -> None:
+        """
+        Handles error messages from both FastAgency and AG2 sources.
+        AG2's ErrorEvent only has an 'error' field without sender/recipient,
+        while FastAgency's Error has sender, recipient, short, and long fields.
+        """
+        # Case 1: Wrapped AG2 Event (has content attribute)
+        if hasattr(message, "content"):
+            content = message.content
+            sender = "System"
+            recipient = "User"
+
+            if content is None:
+                # Null content
+                error_details = "An unknown error occurred."
+            elif hasattr(content, "error"):
+                # AG2 ErrorEvent structure
+                error_details = str(getattr(content, "error", "Unknown AG2 error"))
+            else:
+                # Other wrapped event with unrecognized structure
+                error_details = f"Unrecognized error content format: {str(content)}"
+
+        # Case 2: Native FastAgency Error message (no content attribute)
+        else:
+            if hasattr(message, "sender") and hasattr(message, "recipient"):
+                sender = message.sender
+                recipient = message.recipient
+                error_details = getattr(message, "long", getattr(message, "short", "No details provided."))
+            else:
+                # Fallback for unexpected message formats
+                sender = "System"
+                recipient = "User"
+                error_details = f"An unhandled error message format was received: {str(message)}"
+
+        console_msg = self.ConsoleMessage(
+            sender=sender,
+            recipient=recipient,
+            heading="ERROR",
+            body=str(error_details),
         )
         self._format_and_print(console_msg)
 
