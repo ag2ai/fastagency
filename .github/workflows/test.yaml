@@ -100,7 +100,7 @@ jobs:
           CONTEXT: ${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
       - name: Test with LLMs
         if: ${{ inputs.use-llms != '' }}
-        run: bash scripts/test.sh -vv -m "${{ inputs.use-llms }}"  # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection
+        run: bash scripts/test.sh -vv -m "${{ inputs.use-llms }} and not external"  # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection
         env:
           COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
           CONTEXT: ${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}

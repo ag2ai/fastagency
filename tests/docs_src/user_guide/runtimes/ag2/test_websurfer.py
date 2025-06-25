@@ -14,6 +14,8 @@ INPUT_MESSAGE = (
 
 
 @pytest.mark.openai
+@pytest.mark.external
+@pytest.mark.slow
 @skip_internal_server_error
 def test_main(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("builtins.input", InputMock([INPUT_MESSAGE]))

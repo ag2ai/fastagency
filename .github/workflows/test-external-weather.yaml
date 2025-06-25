@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "Running external tests that depend on weather.tools.fastagency.ai"
           echo "These tests may fail due to network issues, SSL certificates, or service availability"
-          python -m pytest -v -m external tests/docs_src/test_import_external.py
+          python -m pytest -v -m external tests/docs_src/test_import_external.py tests/docs_src/user_guide/external_rest_apis/
         continue-on-error: true
 
       - name: Test Results Summary
