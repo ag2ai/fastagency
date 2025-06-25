@@ -148,7 +148,11 @@ def openapi_oauth2_schema() -> dict[str, Any]:
                             "title": "Grant Type",
                         },
                         "username": {"type": "string", "title": "Username"},
-                        "password": {"type": "string", "title": "Password"},
+                        "password": {
+                            "type": "string",
+                            "title": "Password",
+                            "format": "password",
+                        },
                         "scope": {"type": "string", "title": "Scope", "default": ""},
                         "client_id": {
                             "anyOf": [{"type": "string"}, {"type": "null"}],
@@ -157,6 +161,7 @@ def openapi_oauth2_schema() -> dict[str, Any]:
                         "client_secret": {
                             "anyOf": [{"type": "string"}, {"type": "null"}],
                             "title": "Client Secret",
+                            "format": "password",
                         },
                     },
                     "type": "object",
