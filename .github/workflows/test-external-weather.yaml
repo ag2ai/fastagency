@@ -1,4 +1,4 @@
-name: Test External Weather API
+name: Test External APIs
 
 on:
   workflow_dispatch:
@@ -42,11 +42,13 @@ jobs:
       - name: Install Dependencies
         run: pip install .[docs,testing]
 
-      - name: Run External Weather API Tests
+      - name: Run External API Tests
         run: |
-          echo "Running external tests that depend on weather.tools.fastagency.ai"
+          echo "Running external tests that depend on external services:"
+          echo "  - weather.tools.fastagency.ai (Weather API)"
+          echo "  - Bing Search API (WebSurfer tests)"
           echo "These tests may fail due to network issues, SSL certificates, or service availability"
-          python -m pytest -v -m external tests/docs_src/test_import_external.py tests/docs_src/user_guide/external_rest_apis/
+          python -m pytest -v -m external
         continue-on-error: true
 
       - name: Test Results Summary
@@ -56,7 +58,8 @@ jobs:
           echo "Note: These tests depend on live external services and may fail due to:"
           echo "  - SSL certificate expiration"
           echo "  - Network connectivity issues"
-          echo "  - External service availability"
+          echo "  - External service availability (Weather API, Bing Search API)"
           echo "  - API changes or rate limiting"
+          echo "  - Missing or invalid API keys (BING_API_KEY)"
           echo ""
           echo "Failures in these tests do not indicate issues with the codebase itself."
