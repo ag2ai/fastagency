@@ -28,6 +28,11 @@ MESOP_EXCLUDED_MODULES = {
     "docs_src.user_guide.dependency_injection",
 }
 
+EXTERNAL_MODULES = {
+    "docs_src.user_guide.external_rest_apis.main",
+    "docs_src.user_guide.external_rest_apis.security",
+}
+
 # Mock Environment variables for Mesop Auth testing
 MOCK_ENV_VARS: dict[str, str] = {
     "GOOGLE_APPLICATION_CREDENTIALS": "/path/to/credentials.json",
@@ -47,6 +52,12 @@ def test_list_submodules() -> None:
 
 @pytest.mark.parametrize("module", list_submodules(module_name, include_path=root_path))
 def test_submodules(module: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Skip external modules - they are tested separately in test_import_external.py
+    if module in EXTERNAL_MODULES:
+        pytest.skip(
+            f"External module {module} is tested separately with 'external' marker"
+        )
+
     with add_to_sys_path(root_path):
         if sys.version_info >= (3, 10):
             if module in MESOP_AUTH_MODULES or module in MESOP_NON_AUTH_MODULES:

@@ -272,7 +272,7 @@ convention = "google"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-q -m 'not slow'"
+addopts = "-q -m 'not slow and not external'"
 testpaths = [
     "tests",
 ]
@@ -285,6 +285,7 @@ markers = [
     "togetherai",
     "llm: mark test for use with LLMs",
     "flaky: mark test as flaky",
+    "external: mark test as requiring external services",
 ]
 
 # Add filterwarnings to suppress the specific UserWarning
