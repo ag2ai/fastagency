@@ -70,7 +70,7 @@ copilotkit = [
 ]
 
 openapi = [
-    "fastapi-code-generator==0.5.4",
+    "fastapi-code-generator==0.5.2",
     "fastapi>=0.112,<1",
     "requests",  # do not pin it
 ]
