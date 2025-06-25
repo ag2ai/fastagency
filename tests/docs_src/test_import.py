@@ -31,6 +31,8 @@ MESOP_EXCLUDED_MODULES = {
 EXTERNAL_MODULES = {
     "docs_src.user_guide.external_rest_apis.main",
     "docs_src.user_guide.external_rest_apis.security",
+    "docs_src.user_guide.runtimes.ag2.mesop.main",
+    "docs_src.user_guide.runtimes.ag2.mesop.using_non_openai_models",
 }
 
 # Mock Environment variables for Mesop Auth testing
