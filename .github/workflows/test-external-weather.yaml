@@ -1,0 +1,62 @@
+name: Test External Weather API
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to run tests on'
+        required: true
+        default: 'ubuntu-latest'
+        type: choice
+        options:
+        - ubuntu-latest
+        - macos-latest
+        - windows-latest
+      python-version:
+        description: 'Python version'
+        required: true
+        default: '3.9'
+        type: choice
+        options:
+        - '3.9'
+        - '3.10'
+        - '3.11'
+        - '3.12'
+
+jobs:
+  test-external-weather:
+    runs-on: ${{ inputs.platform }}
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install Dependencies
+        run: pip install .[docs,testing]
+
+      - name: Run External Weather API Tests
+        run: |
+          echo "Running external tests that depend on weather.tools.fastagency.ai"
+          echo "These tests may fail due to network issues, SSL certificates, or service availability"
+          python -m pytest -v -m external tests/docs_src/test_import_external.py
+        continue-on-error: true
+
+      - name: Test Results Summary
+        if: always()
+        run: |
+          echo "External test execution completed."
+          echo "Note: These tests depend on live external services and may fail due to:"
+          echo "  - SSL certificate expiration"
+          echo "  - Network connectivity issues"
+          echo "  - External service availability"
+          echo "  - API changes or rate limiting"
+          echo ""
+          echo "Failures in these tests do not indicate issues with the codebase itself."

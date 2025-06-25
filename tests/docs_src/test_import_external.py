@@ -6,7 +6,7 @@ failures due to network issues, SSL certificate expiration, or service
 unavailability.
 
 To run these tests explicitly:
-    pytest -m external
+    pytest -m external tests/docs_src/test_import_external.py
 """
 
 import importlib

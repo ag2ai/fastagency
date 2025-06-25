@@ -126,7 +126,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: pip install .[submodules,docs,testing]
       - name: Test
-        run: bash scripts/test.sh -m "not (nats or anthropic or azure_oai or openai or togetherai or llm)"
+        run: bash scripts/test.sh -m "not (nats or anthropic or azure_oai or openai or togetherai or llm or external)"
 
   test-windows-latest:
     if: github.event.pull_request.draft == false
@@ -144,7 +144,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: pip install .[submodules,docs,testing]
       - name: Test
-        run: bash scripts/test.sh -m "not (nats or anthropic or azure_oai or openai or togetherai or llm)"
+        run: bash scripts/test.sh -m "not (nats or anthropic or azure_oai or openai or togetherai or llm or external)"
 
   coverage-combine:
     needs:

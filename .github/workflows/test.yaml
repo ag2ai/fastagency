@@ -94,7 +94,7 @@ jobs:
           node-version: lts/*
       - name: Test without LLMs
         if: ${{ inputs.use-llms == ''}}
-        run: bash scripts/test.sh -vv -m "not (anthropic or azure_oai or openai or togetherai or llm)"
+        run: bash scripts/test.sh -vv -m "not (anthropic or azure_oai or openai or togetherai or llm or external)"
         env:
           COVERAGE_FILE: coverage/.coverage.${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
           CONTEXT: ${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
