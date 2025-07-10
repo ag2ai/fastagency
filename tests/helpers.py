@@ -171,7 +171,7 @@ def expand_fixture(
             caller_globals = get_caller_globals()
             caller_globals[name] = f_fixture
 
-            retval.append(f_fixture)
+            retval.append(f_fixture)  # type: ignore[arg-type]
 
         return retval
 
