@@ -1,9 +1,9 @@
 import asyncio
 import threading
 from asyncio import Queue
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from contextlib import contextmanager
-from typing import Any, AsyncIterator, Callable, Optional
+from typing import Any, Callable, Optional
 from uuid import uuid4
 
 import autogen
