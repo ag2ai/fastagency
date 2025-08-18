@@ -71,7 +71,7 @@ jobs:
             echo "BING_API_KEY=${{ secrets.BING_API_KEY }}" >> $GITHUB_ENV
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
