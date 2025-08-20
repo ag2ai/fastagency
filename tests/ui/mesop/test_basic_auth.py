@@ -12,7 +12,7 @@ if sys.version_info >= (3, 10):
 
     class TestBasicAuthMesopHomePage:
         @pytest.fixture
-        def basic_auth(self):
+        def basic_auth(self) -> BasicAuth:
             """Fixture to create a BasicAuth instance with test users."""
             # Create test users with hashed passwords
             test_password = "test_password"  # pragma: allowlist secret
@@ -27,10 +27,10 @@ if sys.version_info >= (3, 10):
 
             return BasicAuth(allowed_users)
 
-        def test_is_authorized_valid_credentials(self, basic_auth):
+        def test_is_authorized_valid_credentials(self, basic_auth: BasicAuth) -> None:
             """Test authorization with valid username and password."""
             assert basic_auth.is_authorized("test_user", "test_password") is True
 
-        def test_is_authorized_invalid_username(self, basic_auth):
+        def test_is_authorized_invalid_username(self, basic_auth: BasicAuth) -> None:
             """Test authorization with invalid username."""
             assert basic_auth.is_authorized("invalid_user", "test_password") is False

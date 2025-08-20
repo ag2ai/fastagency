@@ -47,5 +47,5 @@ tests to run slower, and sometimes even to error due to time out.
 ## Github test workflow integration
 
 * Currently llm-sans set of test is run inside test workflow.
-* Unless for Python 3.9 which is not supported
+* Unless for Python 3.10 which is not supported
 *  Code coverage data is not collected

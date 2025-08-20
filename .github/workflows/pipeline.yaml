@@ -19,7 +19,7 @@ jobs:
   static-analysis:
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +48,7 @@ jobs:
   test-without-llms:
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
       fail-fast: false
     uses: ./.github/workflows/test.yaml
     with:
@@ -73,7 +73,7 @@ jobs:
   test-with-anthropic:
     uses: ./.github/workflows/test.yaml
     with:
-      python-version: "3.9"
+      python-version: "3.10"
       environment: testing
       use-llms: "anthropic"
     secrets: inherit  # pragma: allowlist secret
@@ -81,7 +81,7 @@ jobs:
   test-with-azure_oai:
     uses: ./.github/workflows/test.yaml
     with:
-      python-version: "3.9"
+      python-version: "3.10"
       environment: testing
       use-llms: "azure_oai"
     secrets: inherit  # pragma: allowlist secret
@@ -89,7 +89,7 @@ jobs:
   test-with-openai:
     uses: ./.github/workflows/test.yaml
     with:
-      python-version: "3.9"
+      python-version: "3.10"
       environment: testing
       use-llms: "openai"
     secrets: inherit  # pragma: allowlist secret
@@ -97,7 +97,7 @@ jobs:
   test-with-togetherai:
     uses: ./.github/workflows/test.yaml
     with:
-      python-version: "3.9"
+      python-version: "3.10"
       environment: testing
       use-llms: "togetherai"
     secrets: inherit  # pragma: allowlist secret
@@ -105,7 +105,7 @@ jobs:
   test-with-llm:
     uses: ./.github/workflows/test.yaml
     with:
-      python-version: "3.9"
+      python-version: "3.10"
       environment: testing
       use-llms: "llm"
     secrets: inherit  # pragma: allowlist secret
@@ -164,7 +164,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version: "3.10"
           cache: "pip"
           cache-dependency-path: pyproject.toml
 

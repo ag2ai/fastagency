@@ -39,7 +39,7 @@ def assert_called_with_one_of(
 
 @pytest.mark.skipif(
     sys.version_info < (3, 10),
-    reason="Mesop is not support in Python version 3.9 and below",
+    reason="Mesop is not supported in Python version 3.9 and below",
 )
 class TestMessageBox:
     def _apply_monkeypatch(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:

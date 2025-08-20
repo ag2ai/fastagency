@@ -198,7 +198,7 @@ class FastAPIAdapter(MessageProcessorMixin, CreateWorkflowUIMixin):
 
             return [
                 WorkflowInfo(name=name, description=description)
-                for name, description in zip(names, descriptions)
+                for name, description in zip(names, descriptions, strict=False)
             ]
 
         return router

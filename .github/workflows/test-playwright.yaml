@@ -112,7 +112,7 @@ jobs:
             COVERAGE_PROCESS_START: "e2e/playwright.coverage.cfg"
       - run: echo "obtained FAST_PID" ${{ steps.fastagency-start.outputs.FAST_PID}}  # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection
       - name: Run Playwright tests without LLMs
-        if: ${{ inputs.python-version != '3.9' }}
+        if: ${{ inputs.python-version != '3.10' }}
         run: npx playwright test -c "playwright.coverage.config.ts"
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
@@ -152,7 +152,7 @@ jobs:
       - name: Check coverage file
         run: ls -al coverage
       - name: Store coverage files
-        if: ${{ inputs.python-version != '3.9' }}
+        if: ${{ inputs.python-version != '3.10' }}
         uses: actions/upload-artifact@v4
         with:
           name: .coverage.playwright.${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
