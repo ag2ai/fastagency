@@ -74,9 +74,9 @@ jobs:
             echo "POSTMAN_API_KEY=${{ secrets.POSTMAN_API_KEY }}" >> $GITHUB_ENV
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
           cache: "pip"
@@ -92,7 +92,7 @@ jobs:
       - name: Install Pydantic v2
         run: pip install --pre "pydantic>=2,<3"
       - run: mkdir coverage
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: lts/*
       - name: Install dependencies
