@@ -31,7 +31,7 @@ repos:
         name: Linter
         entry: "scripts/lint-pre-commit.sh"
         language: python
-        #        language_version: python3.9
+
         types: [python]
         require_serial: true
         verbose: true
@@ -42,7 +42,7 @@ repos:
   #       name: Test
   #       entry: "scripts/test-no-llm-pre-commit.sh"
   #       language: python
-  #       #        language_version: python3.9
+  #
   #       types: [python]
   #       require_serial: true
   #       verbose: true
@@ -53,7 +53,7 @@ repos:
         name: Static analysis
         entry: "scripts/static-pre-commit.sh"
         language: python
-        #        language_version: python3.9
+
         types: [python]
         require_serial: true
         verbose: true
