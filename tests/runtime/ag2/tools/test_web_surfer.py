@@ -22,12 +22,12 @@ class TestWebSurferTool:
     ) -> None:
         with pytest.raises(
             ValidationError,
-            match="Field required",
+            match="config_list\n  List should have at least 1 item after validation, not 0",
         ):
             WebSurferTool(
                 name_prefix="test",
-                llm_config={},
-                summarizer_llm_config={},
+                llm_config=LLMConfig(config_list=[]),
+                summarizer_llm_config=LLMConfig(config_list=[]),
             )
 
     @pytest.mark.llm
