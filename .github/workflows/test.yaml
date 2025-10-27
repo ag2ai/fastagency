@@ -71,9 +71,9 @@ jobs:
             echo "BING_API_KEY=${{ secrets.BING_API_KEY }}" >> $GITHUB_ENV
           fi
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
           cache: "pip"
@@ -89,7 +89,7 @@ jobs:
       - name: Install Pydantic v2
         run: pip install --pre "pydantic>=2,<3"
       - run: mkdir coverage
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: lts/*
       - name: Test without LLMs
@@ -107,7 +107,7 @@ jobs:
       - name: Check coverage file
         run: ls -al coverage
       - name: Store coverage files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: .coverage.${{ runner.os }}-py${{ inputs.python-version }}-${{ inputs.use-llms }}
           path: coverage/.coverage.*
