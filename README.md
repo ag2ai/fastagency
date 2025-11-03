@@ -88,9 +88,9 @@ Currently, the only supported runtime is [**AG2** (formerly AutoGen)](https://gi
 
 FastAgency currently supports workflows defined using AG2 (formerly AutoGen) and provides options for different types of applications:
 
-- **Console**: Use the [**`ConsoleUI`**](../api/fastagency/ui/console/ConsoleUI.md) interface for command-line based interaction. This is ideal for developing and testing workflows in a text-based environment.
+- **Console**: Use the [**`ConsoleUI`**](fastagency/ui/console/console.py) interface for command-line based interaction. This is ideal for developing and testing workflows in a text-based environment.
 
-- [**Mesop**](https://google.github.io/mesop/): Utilize [**`MesopUI`**](../api/fastagency/ui/mesop/MesopUI.md) for web-based applications. This interface is suitable for creating web applications with a user-friendly interface.
+- [**Mesop**](https://mesop-dev.github.io/mesop/): Utilize [**`MesopUI`**](fastagency/ui/mesop/mesop.py) for web-based applications. This interface is suitable for creating web applications with a user-friendly interface.
 
 ### Supported Network Adapters
 
