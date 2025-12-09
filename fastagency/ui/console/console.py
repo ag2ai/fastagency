@@ -22,6 +22,7 @@ from ...messages import (
 
 if TYPE_CHECKING:
     from autogen.events.agent_events import (
+        ErrorEvent,
         ExecuteFunctionEvent,
         InputRequestEvent,
         RunCompletionEvent,
@@ -118,8 +119,8 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
         if hasattr(message, "content"):
             content = message.content
             console_msg = self.ConsoleMessage(
-                sender=content.sender,
-                recipient=content.recipient,
+                sender=getattr(content, "sender", None) or "Workflow",
+                recipient=getattr(content, "recipient", None) or "User",
                 heading=message.type,
                 body=getattr(content, "content", None),
             )
@@ -127,8 +128,8 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
         else:
             content = message.model_dump()["content"]
             console_msg = self.ConsoleMessage(
-                sender=message.sender,
-                recipient=message.recipient,
+                sender=getattr(message, "sender", None) or "Workflow",
+                recipient=getattr(message, "recipient", None) or "User",
                 heading=message.type,
                 body=json.dumps(content, indent=2),
             )
@@ -166,6 +167,20 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
 
     def visit_termination(self, message: "TerminationEvent") -> None:
         pass
+
+    def visit_error(self, message: "ErrorEvent") -> None:
+        # Handle ag2 ErrorEvent which doesn't have sender/recipient
+        content = message.content
+        error_obj = getattr(content, "error", content)
+        # Convert error to string (handles exception objects and other types)
+        error_msg = str(error_obj) if error_obj is not None else "Unknown error"
+        console_msg = self.ConsoleMessage(
+            sender="Workflow",
+            recipient="User",
+            heading="error",
+            body=error_msg,
+        )
+        self._format_and_print(console_msg)
 
     def visit_text_message(self, message: TextMessage) -> None:
         console_msg = self.ConsoleMessage(
