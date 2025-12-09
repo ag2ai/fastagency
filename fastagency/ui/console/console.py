@@ -7,12 +7,15 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional, Union
 from uuid import uuid4
 
+from autogen.events.agent_events import ErrorEvent
+
 from ...base import (
     CreateWorkflowUIMixin,
     Runnable,
 )
 from ...logging import get_logger
 from ...messages import (
+    Error,
     IOMessage,
     MessageProcessorMixin,
     MultipleChoice,
@@ -22,7 +25,6 @@ from ...messages import (
 
 if TYPE_CHECKING:
     from autogen.events.agent_events import (
-        ErrorEvent,
         ExecuteFunctionEvent,
         InputRequestEvent,
         RunCompletionEvent,
@@ -168,15 +170,31 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
     def visit_termination(self, message: "TerminationEvent") -> None:
         pass
 
-    def visit_error(self, message: "ErrorEvent") -> None:
-        # Handle ag2 ErrorEvent which doesn't have sender/recipient
-        content = message.content
-        error_obj = getattr(content, "error", content)
-        # Convert error to string (handles exception objects and other types)
-        error_msg = str(error_obj) if error_obj is not None else "Unknown error"
+    def visit_error(self, message: Union[Error, ErrorEvent]) -> None:
+        # Handle both fastagency Error IOMessage and ag2 ErrorEvent
+        # fastagency Error has: short, long, sender, recipient
+        # ag2 ErrorEvent has: content.error, content.uuid
+        if isinstance(message, Error):
+            # fastagency Error IOMessage
+            error_msg = message.long or message.short or "Unknown error"
+            sender = message.sender or "Workflow"
+            recipient = message.recipient or "User"
+        elif isinstance(message, ErrorEvent):
+            # ag2 ErrorEvent
+            content = message.content
+            error_obj = getattr(content, "error", content)
+            error_msg = str(error_obj) if error_obj is not None else "Unknown error"
+            sender = "Workflow"
+            recipient = "User"
+        else:
+            # Unknown error type - fallback
+            error_msg = str(message)
+            sender = "Workflow"
+            recipient = "User"
+
         console_msg = self.ConsoleMessage(
-            sender="Workflow",
-            recipient="User",
+            sender=sender,
+            recipient=recipient,
             heading="error",
             body=error_msg,
         )
