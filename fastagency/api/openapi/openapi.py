@@ -323,7 +323,7 @@ class OpenAPI:
         if servers:
             openapi_parsed = json.loads(openapi_json)  # type: ignore [arg-type]
             openapi_parsed["servers"] = servers
-            openapi_json = json.dumps(openapi_parsed)
+            openapi_json = json.dumps(openapi_parsed, ensure_ascii=False)
 
         with optional_temp_path(client_source_path) as td:
             suffix = td.name
