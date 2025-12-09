@@ -92,7 +92,7 @@ server = [
 ]
 
 basic_auth = [
-    "bcrypt>=4.2.0"
+    "bcrypt>=4.2.0,<5"
 ]
 
 firebase = [
