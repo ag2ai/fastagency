@@ -7,12 +7,15 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional, Union
 from uuid import uuid4
 
+from autogen.events.agent_events import ErrorEvent
+
 from ...base import (
     CreateWorkflowUIMixin,
     Runnable,
 )
 from ...logging import get_logger
 from ...messages import (
+    Error,
     IOMessage,
     MessageProcessorMixin,
     MultipleChoice,
@@ -118,8 +121,8 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
         if hasattr(message, "content"):
             content = message.content
             console_msg = self.ConsoleMessage(
-                sender=content.sender,
-                recipient=content.recipient,
+                sender=getattr(content, "sender", None) or "Workflow",
+                recipient=getattr(content, "recipient", None) or "User",
                 heading=message.type,
                 body=getattr(content, "content", None),
             )
@@ -127,8 +130,8 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
         else:
             content = message.model_dump()["content"]
             console_msg = self.ConsoleMessage(
-                sender=message.sender,
-                recipient=message.recipient,
+                sender=getattr(message, "sender", None) or "Workflow",
+                recipient=getattr(message, "recipient", None) or "User",
                 heading=message.type,
                 body=json.dumps(content, indent=2),
             )
@@ -166,6 +169,36 @@ class ConsoleUI(MessageProcessorMixin, CreateWorkflowUIMixin):  # implements UI
 
     def visit_termination(self, message: "TerminationEvent") -> None:
         pass
+
+    def visit_error(self, message: Union[Error, ErrorEvent]) -> None:
+        # Handle both fastagency Error IOMessage and ag2 ErrorEvent
+        # fastagency Error has: short, long, sender, recipient
+        # ag2 ErrorEvent has: content.error, content.uuid
+        if isinstance(message, Error):
+            # fastagency Error IOMessage
+            error_msg = message.long or message.short or "Unknown error"
+            sender = message.sender or "Workflow"
+            recipient = message.recipient or "User"
+        elif isinstance(message, ErrorEvent):
+            # ag2 ErrorEvent
+            content = message.content
+            error_obj = getattr(content, "error", content)
+            error_msg = str(error_obj) if error_obj is not None else "Unknown error"
+            sender = "Workflow"
+            recipient = "User"
+        else:
+            # Unknown error type - fallback
+            error_msg = str(message)
+            sender = "Workflow"
+            recipient = "User"
+
+        console_msg = self.ConsoleMessage(
+            sender=sender,
+            recipient=recipient,
+            heading="error",
+            body=error_msg,
+        )
+        self._format_and_print(console_msg)
 
     def visit_text_message(self, message: TextMessage) -> None:
         console_msg = self.ConsoleMessage(

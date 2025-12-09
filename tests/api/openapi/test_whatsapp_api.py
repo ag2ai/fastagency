@@ -53,10 +53,6 @@ def test_real_whatsapp_end2end(
     mock_post.assert_called_once_with(
         "https://api.infobip.com/whatsapp/1/message/text",
         params={},
-        headers={
-            "Authorization": header_authorization,
-            "Content-Type": "application/json",
-        },
         json={
             "from_": "447860099299",
             "to": "38591152131",
@@ -67,5 +63,10 @@ def test_real_whatsapp_end2end(
             "urlOptions": None,
             "entityId": None,
             "applicationId": None,
+            "context": None,
+        },
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": header_authorization,
         },
     )
