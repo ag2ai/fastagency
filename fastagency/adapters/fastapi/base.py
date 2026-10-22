@@ -399,7 +399,7 @@ class FastAPIProvider(ProviderProtocol):
 
     def _get_workflow_info(self) -> list[dict[str, str]]:
         try:
-            resp = requests.get(f"{self.fastapi_url}/{self.discovery_path}", timeout=15)
+            resp = requests.get(f"{self.fastapi_url}{self.discovery_path}", timeout=15)
         except requests.exceptions.ConnectionError as e:
             raise FastAgencyFastAPIConnectionError(
                 f"Unable to connect to FastAPI server at {self.fastapi_url}"
