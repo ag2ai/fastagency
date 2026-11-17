@@ -26,12 +26,6 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
-      - uses: tibdex/github-app-token@v2
-        id: generate-token
-        with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -57,7 +51,7 @@ jobs:
         if: steps.git-check.outputs.changes_detected
         uses: peter-evans/create-pull-request@v7
         with:
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ env.BRANCH_NAME }}
           base: "main" # The branch you want to merge into
           title: "Update Release Notes for ${{ env.TAG_NAME }}"
